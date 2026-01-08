@@ -1,0 +1,11 @@
+{{ range $container := $ }}
+  {{ $enabled := index $container.Labels "traefik.enable" }}
+  {{ if ne $enabled "false" }}
+    {{ $service_name := index $container.Labels "traefik.service.name" }}
+    {{ if not $service_name }}
+      {{ $service_name = $container.Name }}
+    {{ end }}
+    {{ $service_name = trimPrefix "/" $service_name }}
+{{ $service_name }}.lan
+  {{ end }}
+{{ end }}
