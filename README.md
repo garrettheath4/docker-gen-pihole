@@ -1,4 +1,4 @@
-# docker-gen-dns
+# docker-gen-pihole
 
 Automatically updates local DNS records in Pi-hole based on running containers in Docker. This eliminates the need to manually create DNS records for Traefik-routed domains like `n8n.lan`.
 
@@ -68,7 +68,7 @@ Create the following directories on your Docker host:
 │   ├── scripts/
 │   │   └── sync-pihole-dns.sh    # Copy sync-pihole-dns.sh here
 │   └── ...                        # Other Pi-hole data
-└── docker-gen/
+└── docker-gen-pihole/
     ├── templates/
     │   └── lan-hosts.tmpl         # Copy lan-hosts.tmpl here
     └── docker-domains/
@@ -87,23 +87,23 @@ services:
     volumes:
       - /portainer/Files/AppData/Config/PiHole/:/etc/pihole
       - /portainer/Files/AppData/Config/PiHole/DNS/:/etc/dnsmasq.d
-      - /portainer/Files/AppData/Config/docker-gen/docker-domains/:/docker-domains:ro
+      - /portainer/Files/AppData/Config/docker-gen-pihole/docker-domains/:/docker-domains:ro
     environment:
       TZ: ${TZ:-America/New_York}
       FTLCONF_webserver_api_password: ${PIHOLE_PASSWORD}
     # ... other pihole config (ports, networks, etc)
 
-  docker-gen:
+  docker-gen-pihole:
     image: garrettheath4/docker-gen-with-cli:latest
-    container_name: docker-gen-dns
+    container_name: docker-gen-pihole
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /portainer/Files/AppData/Config/docker-gen/templates/:/etc/docker-gen/templates:ro
-      - /portainer/Files/AppData/Config/docker-gen/docker-domains/:/output
+      - /portainer/Files/AppData/Config/docker-gen-pihole/templates/:/etc/docker-gen-pihole/templates:ro
+      - /portainer/Files/AppData/Config/docker-gen-pihole/docker-domains/:/output
     command: >-
       -watch
       -notify "docker exec pihole /etc/pihole/scripts/sync-pihole-dns.sh"
-      /etc/docker-gen/templates/lan-hosts.tmpl
+      /etc/docker-gen-pihole/templates/lan-hosts.tmpl
       /output/domains.txt
     depends_on:
       - pihole
@@ -148,7 +148,7 @@ The generated DNS records would be:
 ### Check Generated Domains
 
 ```bash
-cat /portainer/Files/AppData/Config/docker-gen/docker-domains/domains.txt
+cat /portainer/Files/AppData/Config/docker-gen-pihole/docker-domains/domains.txt
 ```
 
 ### Verify Pi-hole Configuration
@@ -163,10 +163,10 @@ docker exec pihole grep -A5 "hosts\|cnameRecords" /etc/pihole/pihole.toml
 docker exec pihole /etc/pihole/scripts/sync-pihole-dns.sh
 ```
 
-### View docker-gen Logs
+### View docker-gen-pihole Logs
 
 ```bash
-docker logs docker-gen-dns
+docker logs docker-gen-pihole
 ```
 
-<!-- vim: set textwidth=120 smarttab shiftround expandtab nosmartindent: -->
+<!-- vim: set smarttab shiftround expandtab nosmartindent: -->
